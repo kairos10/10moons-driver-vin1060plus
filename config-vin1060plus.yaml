@@ -9,6 +9,7 @@ pen:
     max_pressure: 2048   # manual says 8192 but cheap chinese chip reports outputs much less values
     pressure_min: 300  # when pressing the tablet pen as hard as functionally possible (yours may vary)
     pressure_contact_threshold: 600    # when making contact with the tablet surface (yours may vary)
+    smooth_seq_len: 12
 actions:
     pen_touch: BTN_LEFT #BTN_TOUCH
     pen: BTN_TOOL_PEN

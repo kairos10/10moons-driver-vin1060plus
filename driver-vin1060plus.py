@@ -1,3 +1,5 @@
+#!/usr/bin/python3.12
+
 # Proper test driver for the 10moons graphics tablet
 
 import os
@@ -10,6 +12,7 @@ import usb
 import yaml
 
 DEBUG = False	# = True --> Useful when inspecting tablet behaviour and pen interactions
+#DEBUG = True
 
 path = os.path.join(os.path.dirname(__file__), "config-vin1060plus.yaml")
 # Loading tablet configuration
@@ -105,6 +108,15 @@ pressure_min = config["pen"]["pressure_min"]
 pressure_contact_threshold = config["pen"]["pressure_contact_threshold"]
 #Unfortunately vin1060plus does not show 8192 pressure resolution.  #TODO: need to review pressure parameters
 
+try:
+    smooth_seq_len = config["pen"]["smooth_seq_len"]
+except:
+    smooth_seq_len = 1
+pen_reads_x = [ int(max_x/2) for _ in range(smooth_seq_len) ]
+pen_reads_y = [ int(max_y/2) for _ in range(smooth_seq_len) ]
+pen_reads_len = smooth_seq_len
+pen_reads_i = 0
+#
 pressed_prev = None
 # Infinite loop
 while True:
@@ -125,6 +137,14 @@ while True:
         if data[5] in [3,4,5,6]: #[192, 193]: # Pen actions
             pen_x = abs(max_x - (data[x1] * 255 + data[x2]))
             pen_y = abs(max_y - (data[y1] * 255 + data[y2]))
+            #
+            pen_reads_x[pen_reads_i] = pen_x
+            pen_reads_y[pen_reads_i] = pen_y
+            pen_reads_i += 1
+            pen_reads_i %= pen_reads_len
+            pen_x = int( sum(pen_reads_x) / pen_reads_len )
+            pen_y = int( sum(pen_reads_y) / pen_reads_len )
+            #
             pen_pressure = pressure_max - ( data[5] * 255 + data[6])
             if(DEBUG) : print("pen_x , pen_y : " , pen_x ,"-", pen_y , " --- pen_pressure :" , pen_pressure )
             if pen_pressure >= pressure_contact_threshold : # when Pen touches tablet surface detection value
