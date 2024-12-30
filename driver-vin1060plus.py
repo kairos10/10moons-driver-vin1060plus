@@ -117,7 +117,10 @@ pen_reads_y = [ int(max_y/2) for _ in range(smooth_seq_len) ]
 pen_reads_len = smooth_seq_len
 pen_reads_i = 0
 #
-pressed_prev = None
+click_prev = True
+keys_prev = [0] * len(config["actions"]["tablet_buttons"])
+penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
+#
 # Infinite loop
 while True:
     try:
@@ -134,95 +137,71 @@ while True:
         #(bottom-right corner)
         #array('B', [6, 15, 255, 15, 255, 6, 192, 6, 46, 2, 5, 255, 51, 15, 255, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         
-        if data[5] in [3,4,5,6]: #[192, 193]: # Pen actions
-            pen_x = abs(max_x - (data[x1] * 255 + data[x2]))
-            pen_y = abs(max_y - (data[y1] * 255 + data[y2]))
-            #
-            pen_reads_x[pen_reads_i] = pen_x
-            pen_reads_y[pen_reads_i] = pen_y
-            pen_reads_i += 1
-            pen_reads_i %= pen_reads_len
-            pen_x = int( sum(pen_reads_x) / pen_reads_len )
-            pen_y = int( sum(pen_reads_y) / pen_reads_len )
-            #
-            pen_pressure = pressure_max - ( data[5] * 255 + data[6])
-            if(DEBUG) : print("pen_x , pen_y : " , pen_x ,"-", pen_y , " --- pen_pressure :" , pen_pressure )
-            if pen_pressure >= pressure_contact_threshold : # when Pen touches tablet surface detection value
-                if(DEBUG) : print("tablet tapped")
-                vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 1 )
-                #vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, 1 ) #ecodes.BTN_TOUCH not executed ever since src code mods from original driver.py
-                vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 1 ) # ecodes.BTN_MOUSE works, while ecodes.BTN_TOUCH does not execute
-            else:
-                vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 0 ) # BTN_MOUSE up event
-            vpen.syn()
-            vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
-            vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
-            vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
-        
-        key_pressed = ( data[11] , data[12] )
-        if(DEBUG) : print("--- key_pressed : " , key_pressed )
-        pressed = None
+        # data[5]: MSB pressure level 6,5,4,3
+        if data[5] not in [3,4,5,6]:
+            print(f" *DATA5:{data[5]}* ", end="", flush=True)
+            continue
+        pen_reads_x[pen_reads_i] = abs(max_x - (data[x1] * 255 + data[x2]))
+        pen_reads_y[pen_reads_i] = abs(max_y - (data[y1] * 255 + data[y2]))
+        pen_reads_i = (pen_reads_i+1) % pen_reads_len
+        pen_x = int( sum(pen_reads_x) / pen_reads_len )
+        pen_y = int( sum(pen_reads_y) / pen_reads_len )
+        #
+        pen_pressure = pressure_max - ( data[5] * 255 + data[6])
+        if pen_pressure >= pressure_contact_threshold : # when Pen touches tablet surface detection value
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 1 )
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 1 ) # ecodes.BTN_MOUSE works, while ecodes.BTN_TOUCH does not execute
+            click_prev = True
+        elif click_prev:
+            # vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 0 )
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 0 ) # BTN_MOUSE up event
+            click_prev = False
+            # print(".", end="", flush=True)
+        # vpen.syn()
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
+        #
+        # print(f"pen_x[{pen_x}] , pen_y[{pen_y}], pen_pressure[{pen_pressure}]", flush=True )
 
-        if key_pressed == (255,49): # 1st button (from top left - labelled "E")
-            pressed = 0
-        if key_pressed == (255,35): # 2nd button (labelled "B")
-            pressed = 1
-        if key_pressed == (127,51): # 3rd button (labelled "CTRL-")
-            pressed = 2
-        if key_pressed == (255,50): # 4th button (labelled "CTRL+")
-            pressed = 3
-        if key_pressed == (191,51): # 5th button (labelled "[") #TODO
-            pressed = 4
-        if key_pressed == (255,19): # 6th button (labelled "]") #TODO
-            pressed = 5
-        if key_pressed == (223,51): # 7th button (labelled "MouseSymbol_arrowUP")
-            pressed = 6
-        if key_pressed == (254,51): # 8th button (labelled "TAB")
-            pressed = 7
-        if key_pressed == (239,51): # 9th button (labelled "MouseSymbol_arrowDown")
-            pressed = 8
-        if key_pressed == (253,51): # 10th button (labelled "SPACE")
-            pressed = 9
-        if key_pressed == (247,51): # 11th button (labelled "CTRL")
-            pressed = 10
-        if key_pressed == (251,51): # 12th button (labelled "ALT")
-            pressed = 11
-                                                                                                       
-        # press types: 0 - up; 1 - down; 2 - hold
-        press_type = 0
-        if key_pressed != (255,51) : # Key_code tuple when no keys pressed
-            press_type = 1
-            #if pressed_prev == pressed :   #2-hold is not working nicely
-            #    press_type = 2
-            pressed_prev = pressed
-        
-        if pressed_prev is not None:
-            if(DEBUG) : 
-                print("Key_pressed detected : ", pressed_prev , " :: ", config["actions"]["tablet_buttons"][pressed_prev] , " -- press type ( 0-up, 1-down , 2-hold) :", press_type )
-            key_codes = config["actions"]["tablet_buttons"][pressed_prev].split("+")
-            for key in key_codes:
-                act = ecodes.ecodes[key]
-                vbtn.write(ecodes.EV_KEY, act, press_type)
-        
-        pen_button = data[9] 
-        if(DEBUG) : print("--- pen_button_pressed : " , pen_button )
-        pen_button_pressed = None
-        if pen_button == 4: # lower pen button (one closer to pen tip)
-            pen_button_pressed = 0
-        if pen_button == 6: # upper pen button (one further from pen tip)
-            pen_button_pressed = 1
+        # key: data11, data12
+        keys = [0] * len(keys_prev)
+        if (~data[11] & 128): keys[2]=1     # C-
+        if (~data[11] & 64): keys[4]=1      # [
+        if (~data[11] & 32): keys[6]=1      # clk+
+        if (~data[11] & 16): keys[8]=1      # clk-
+        if (~data[11] & 8): keys[10]=1      # CTRL
+        if (~data[11] & 4): keys[11]=1      # ALT
+        if (~data[11] & 2): keys[9]=1       # SPACE
+        if (~data[11] & 1): keys[7]=1       # TAB
+        #
+        if (~data[12] & 32): keys[5]=1      # ]
+        if (~data[12] & 16): keys[1]=1      # B
+        if (~data[12] & 2): keys[0]=1       # E
+        if (~data[12] & 1): keys[3]=1       # C+
+        #
+        for i in range(len(keys)):
+            if keys[i] != keys_prev[i]:
+                key_codes = config["actions"]["tablet_buttons"][i].split("+")
+                for key in key_codes:
+                    act = ecodes.ecodes[key]
+                    vbtn.write(ecodes.EV_KEY, act, keys[i])
+                    # print(f"keys[{i}] : {keys[i]}")
+        keys_prev = keys
 
-        # press types: 0 - up; 1 - down; 2 - hold
-        press_type = 0
-        if pen_button != 2 : # Default value when no pen button pressed 
-            press_type = 1   # press_type=2 (hold status) is not working nicely, so skip implementation
-
-        if pen_button != 2 : #
-            if(DEBUG) : print("pen_button_pressed detected : ", pen_button_pressed , " :: ", config["actions"]["pen_buttons"][pen_button_pressed], " -- press type ( 0-up, 1-down , 2-hold) :", press_type )
-            key_codes = config["actions"]["tablet_buttons"][pen_button_pressed].split("+")
-            for key in key_codes:
-                act = ecodes.ecodes[key]
-                vbtn.write(ecodes.EV_KEY, act, press_type)
+        # pen button 1: 4, pen button 2: 6, no button: 2
+        penbuttons = [0] * len(penbuttons_prev)
+        if (data[9] == 4): penbuttons[0] = 1
+        if (data[9] == 6): penbuttons[1] = 1
+        #
+        for i in range(len(penbuttons)):
+            if penbuttons[i] != penbuttons_prev[i]:
+                key_codes = config["actions"]["pen_buttons"][i].split("+")
+                for key in key_codes:
+                    act = ecodes.ecodes[key]
+                    vbtn.write(ecodes.EV_KEY, act, penbuttons[i])
+                    # print(f"penbutton[{i}] : {penbuttons[i]}")
+        penbuttons_prev = penbuttons
 
         # Flush
         vpen.syn()
@@ -232,8 +211,8 @@ while True:
             vpen.close()
             raise Exception("Device has been disconnected")
     except KeyboardInterrupt:
-    	vpen.close()
-    	vbtn.close()
-    	sys.exit("\nDriver terminated successfully.")
+        vpen.close()
+        vbtn.close()
+        sys.exit("\nDriver terminated successfully.")
     except Exception as e:
-    	print(e)
+        print(e)
