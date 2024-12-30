@@ -1,3 +1,7 @@
+# CHANGES
+ * apply moving average to pen movements -- config.pen.smooth_seq_len (default=1)
+ * fix keys/buttons handling
+
 # 10moons-driver-vin1060plus
 
 Forked from [Alex-S-V](https://github.com/alex-s-v/10moons-driver) ( thanks dude for the pyUSB and T503 case study) 
