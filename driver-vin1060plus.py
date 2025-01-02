@@ -121,6 +121,7 @@ pen_reads_i = 0
 pen_touch_prev = True
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
+is_rotated = False
 #
 # Infinite loop
 while True:
@@ -183,6 +184,21 @@ while True:
         if (data[9] == 4): penbuttons[0] = 1
         if (data[9] == 6): penbuttons[1] = 1
 
+
+
+        if keys == config["settings"]["rotate_shortcut"]:
+            # rotate axes + invert Y
+            keys = [0] * len(keys)
+            x1, x2, y1, y2 = (y1, y2, x1, x2)
+            config["settings"]["swap_direction_y"] = 1 - config["settings"]["swap_direction_y"]
+            if is_rotated:
+                max_x = config["pen"]["max_x"] * config["settings"]["swap_direction_x"]
+                max_y = config["pen"]["max_y"] * config["settings"]["swap_direction_y"]
+            else:
+                max_y = max_x
+                max_x = config["pen"]["max_y"] * config["settings"]["swap_direction_y"]
+            is_rotated = not is_rotated
+            print(f"tablet axes rotated: {is_rotated}")
 
         vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, int(pen_touch) )
         if pen_touch:

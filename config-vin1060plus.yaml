@@ -48,6 +48,7 @@ actions:
         - KEY_LEFTCTRL                  #labelled 'CTRL'
         - KEY_LEFTALT                   #labelled 'ALT'
 settings:
+    rotate_shortcut: [ 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1 ] # key combination to rotate the tablet: CTRL+ALT+WHEELUP+WHEELDOWN
     swap_axis: false
     swap_direction_x: false
     swap_direction_y: false
