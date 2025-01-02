@@ -24,7 +24,8 @@ with open(path, "r") as f:
 pen_codes = []
 btn_codes = []
 for k, v in config["actions"].items():
-    codes = btn_codes if k == "tablet_buttons" else pen_codes
+    #codes = btn_codes if k == "tablet_buttons" else pen_codes
+    codes = btn_codes if k in ["tablet_buttons", "pen_buttons"] else pen_codes
     if isinstance(v, list):
         codes.extend(v)
     else:
@@ -117,7 +118,7 @@ pen_reads_y = [ int(max_y/2) for _ in range(smooth_seq_len) ]
 pen_reads_len = smooth_seq_len
 pen_reads_i = 0
 #
-click_prev = True
+pen_touch_prev = True
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 #
@@ -138,33 +139,30 @@ while True:
         #array('B', [6, 15, 255, 15, 255, 6, 192, 6, 46, 2, 5, 255, 51, 15, 255, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         
         # data[5]: MSB pressure level 6,5,4,3
-        if data[5] not in [3,4,5,6]:
-            print(f" *DATA5:{data[5]}* ", end="", flush=True)
+        if data[0] != 6:
+            print(f"wrong reportID[{data[0]}]", flush=True)
             continue
+        if len(data) < 13:
+            print(f"wrong report len[{len(data)}]", flush=True)
+            for i in range(len(data)): print(f"{data[i]:02x}", end=" ", flush=True)
+            print("")
+            continue
+        if data[5] not in [2,3,4,5,6,7]:
+            print(f"*pressureMSB:{data[5]:02x}*", end="", flush=True)
+            continue
+
+        # xy: data[1,2,3,4]
         pen_reads_x[pen_reads_i] = abs(max_x - (data[x1] * 255 + data[x2]))
         pen_reads_y[pen_reads_i] = abs(max_y - (data[y1] * 255 + data[y2]))
         pen_reads_i = (pen_reads_i+1) % pen_reads_len
         pen_x = int( sum(pen_reads_x) / pen_reads_len )
         pen_y = int( sum(pen_reads_y) / pen_reads_len )
-        #
-        pen_pressure = pressure_max - ( data[5] * 255 + data[6])
-        if pen_pressure >= pressure_contact_threshold : # when Pen touches tablet surface detection value
-            vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 1 )
-            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 1 ) # ecodes.BTN_MOUSE works, while ecodes.BTN_TOUCH does not execute
-            click_prev = True
-        elif click_prev:
-            # vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 0 )
-            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, 0 ) # BTN_MOUSE up event
-            click_prev = False
-            # print(".", end="", flush=True)
-        # vpen.syn()
-        vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
-        vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
-        vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
-        #
-        # print(f"pen_x[{pen_x}] , pen_y[{pen_y}], pen_pressure[{pen_pressure}]", flush=True )
 
-        # key: data11, data12
+        # pressure: data[5,6]
+        pen_pressure = pressure_max - ( (data[5] & 31) * 255 + data[6]) # 8192 levels -> 13bits -> 5bits from data5 + 8bits from data6
+        pen_touch = (pen_pressure >= pressure_contact_threshold) # when Pen touches tablet surface detection value
+
+        # keys: data11, data12
         keys = [0] * len(keys_prev)
         if (~data[11] & 128): keys[2]=1     # C-
         if (~data[11] & 64): keys[4]=1      # [
@@ -179,7 +177,24 @@ while True:
         if (~data[12] & 16): keys[1]=1      # B
         if (~data[12] & 2): keys[0]=1       # E
         if (~data[12] & 1): keys[3]=1       # C+
-        #
+
+        # pen button 1: 4, pen button 2: 6, no button: 2
+        penbuttons = [0] * len(penbuttons_prev)
+        if (data[9] == 4): penbuttons[0] = 1
+        if (data[9] == 6): penbuttons[1] = 1
+
+
+        if pen_touch:
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 1 )
+        if pen_touch or pen_touch_prev:
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, int(pen_touch) ) # ecodes.BTN_MOUSE works, while ecodes.BTN_TOUCH does not execute
+        pen_touch_prev = pen_touch
+        # vpen.syn()
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
+        # print(f"pen_x[{pen_x}] , pen_y[{pen_y}], pen_pressure[{pen_pressure}]", flush=True )
+
         for i in range(len(keys)):
             if keys[i] != keys_prev[i]:
                 key_codes = config["actions"]["tablet_buttons"][i].split("+")
@@ -189,11 +204,6 @@ while True:
                     # print(f"keys[{i}] : {keys[i]}")
         keys_prev = keys
 
-        # pen button 1: 4, pen button 2: 6, no button: 2
-        penbuttons = [0] * len(penbuttons_prev)
-        if (data[9] == 4): penbuttons[0] = 1
-        if (data[9] == 6): penbuttons[1] = 1
-        #
         for i in range(len(penbuttons)):
             if penbuttons[i] != penbuttons_prev[i]:
                 key_codes = config["actions"]["pen_buttons"][i].split("+")
@@ -202,6 +212,8 @@ while True:
                     vbtn.write(ecodes.EV_KEY, act, penbuttons[i])
                     # print(f"penbutton[{i}] : {penbuttons[i]}")
         penbuttons_prev = penbuttons
+
+
 
         # Flush
         vpen.syn()

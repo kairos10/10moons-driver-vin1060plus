@@ -15,19 +15,31 @@ actions:
     pen: BTN_TOOL_PEN
     pen_buttons:
     #for Buttons :: python -c "from evdev import ecodes; print([x for x in dir(ecodes) if 'BTN_' in x])"
-        - BTN_STYLUS                    #1st button closest to tip
-        - BTN_STYLUS2                   #2nd button
+        #- BTN_STYLUS                    #1st button closest to tip
+        #- BTN_STYLUS2                   #2nd button
+        - BTN_RIGHT
+        - KEY_LEFTCTRL+KEY_Z
     tablet_buttons: 
     #for Keys :: python -c "from evdev import ecodes; print([x for x in dir(ecodes) if 'KEY_' in x])"
-        - KEY_E                         #labelled 'E'
-        - KEY_B                         #labelled 'B'
+        #- KEY_E                         #labelled 'E'
+        - KEY_LEFTSHIFT+KEY_LEFTCTRL+KEY_E
+        #
+        #- KEY_B                         #labelled 'B'
+        - KEY_LEFTSHIFT+KEY_LEFTCTRL+KEY_P
+        #
         - KEY_LEFTCTRL+KEY_KPPLUS       #labelled 'CTRL -'
         - KEY_LEFTCTRL+KEY_KPMINUS      #labelled 'CTRL +'
         - KEY_LEFTBRACE                 #labelled '['
         - KEY_RIGHTBRACE                #labelled ']'
-        - KEY_SCROLLUP                  #labelled 'Mouse Icon arrow UP'
+        #
+        #- KEY_SCROLLUP                  #labelled 'Mouse Icon arrow UP'
+        - KEY_UP
+        #
         - KEY_TAB                       #labelled 'TAB'
-        - KEY_SCROLLDOWN                #labelled 'Mouse Icon arrow DOWN'
+        #
+        #- KEY_SCROLLDOWN                #labelled 'Mouse Icon arrow DOWN'
+        - KEY_DOWN
+        #
         - KEY_SPACE                     #labelled 'SPACE'
         - KEY_LEFTCTRL                  #labelled 'CTRL'
         - KEY_LEFTALT                   #labelled 'ALT'
