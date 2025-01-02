@@ -184,15 +184,16 @@ while True:
         if (data[9] == 6): penbuttons[1] = 1
 
 
+        vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, int(pen_touch) )
         if pen_touch:
-            vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, 1 )
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_TOOL_PEN, int(pen_touch) )
         if pen_touch or pen_touch_prev:
-            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, int(pen_touch) ) # ecodes.BTN_MOUSE works, while ecodes.BTN_TOUCH does not execute
+            vpen.write(ecodes.EV_KEY, ecodes.BTN_MOUSE, int(pen_touch) )
         pen_touch_prev = pen_touch
-        # vpen.syn()
         vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
+        vpen.syn()
         # print(f"pen_x[{pen_x}] , pen_y[{pen_y}], pen_pressure[{pen_pressure}]", flush=True )
 
         for i in range(len(keys)):

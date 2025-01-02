@@ -13,6 +13,10 @@ pen:
 actions:
     pen_touch: BTN_LEFT #BTN_TOUCH
     pen: BTN_TOOL_PEN
+    rubber: BTN_TOOL_RUBBER
+    pencil: BTN_TOOL_PENCIL
+    brush: BTN_TOOL_BRUSH
+    touch: BTN_TOUCH
     pen_buttons:
     #for Buttons :: python -c "from evdev import ecodes; print([x for x in dir(ecodes) if 'BTN_' in x])"
         #- BTN_STYLUS                    #1st button closest to tip
