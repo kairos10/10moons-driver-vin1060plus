@@ -1,12 +1,13 @@
 # CHANGES
  * apply moving average to pen movements -- config.pen.smooth_seq_len (default=1)
  * fix keys/buttons handling
+ * rotate tablet by pressing the tablet keys CTRL+ALT+wheelUP+wheelDOWN
 
 # 10moons-driver-vin1060plus
 
 Forked from [Alex-S-V](https://github.com/alex-s-v/10moons-driver) ( thanks dude for the pyUSB and T503 case study) 
 
-![Aliexpress Graphics Tablet VINSA 1060plus](http://eng.10moons.com/upload/2018/06/11/201806112311552.jpg)
+[Aliexpress Graphics Tablet VINSA 1060plus](http://eng.10moons.com/upload/2018/06/11/201806112311552.jpg)
 
 [10moons Graphics Tablet product homepage](http://eng.10moons.com/info5494.html)
 

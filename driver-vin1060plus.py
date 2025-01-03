@@ -122,6 +122,8 @@ pen_touch_prev = True
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 is_rotated = False
+pen_pressure_prev = 0
+evnum=0
 #
 # Infinite loop
 while True:
@@ -179,7 +181,7 @@ while True:
         if (~data[12] & 2): keys[0]=1       # E
         if (~data[12] & 1): keys[3]=1       # C+
 
-        # pen button 1: 4, pen button 2: 6, no button: 2
+        # pen buttons: data9: b1=4, b2=6, no_buttons=2
         penbuttons = [0] * len(penbuttons_prev)
         if (data[9] == 4): penbuttons[0] = 1
         if (data[9] == 6): penbuttons[1] = 1
