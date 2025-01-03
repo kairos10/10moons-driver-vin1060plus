@@ -122,8 +122,6 @@ pen_touch_prev = True
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 is_rotated = False
-pen_pressure_prev = 0
-evnum=0
 #
 # Infinite loop
 while True:
@@ -201,6 +199,7 @@ while True:
                 max_x = config["pen"]["max_y"] * config["settings"]["swap_direction_y"]
             is_rotated = not is_rotated
             print(f"tablet axes rotated: {is_rotated}")
+            continue
 
         vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, int(pen_touch) )
         if pen_touch:
@@ -211,9 +210,9 @@ while True:
         vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
+        #
         vpen.syn()
-        # print(f"pen_x[{pen_x}] , pen_y[{pen_y}], pen_pressure[{pen_pressure}]", flush=True )
-
+        
         for i in range(len(keys)):
             if keys[i] != keys_prev[i]:
                 key_codes = config["actions"]["tablet_buttons"][i].split("+")
@@ -222,7 +221,7 @@ while True:
                     vbtn.write(ecodes.EV_KEY, act, keys[i])
                     # print(f"keys[{i}] : {keys[i]}")
         keys_prev = keys
-
+        #
         for i in range(len(penbuttons)):
             if penbuttons[i] != penbuttons_prev[i]:
                 key_codes = config["actions"]["pen_buttons"][i].split("+")
@@ -231,12 +230,13 @@ while True:
                     vbtn.write(ecodes.EV_KEY, act, penbuttons[i])
                     # print(f"penbutton[{i}] : {penbuttons[i]}")
         penbuttons_prev = penbuttons
+        #
+        vbtn.syn()
 
 
 
         # Flush
         vpen.syn()
-        vbtn.syn()
     except usb.core.USBError as e:
         if e.args[0] == 19:
             vpen.close()

@@ -1,0 +1,1 @@
+ACTION=="add", ATTR{idVendor}=="08f2", ATTR{idProduct}=="6811", SUBSYSTEM=="usb", TAG+="systemd", ENV{SYSTEMD_WANTS}="tablet-vinsa1060.service"

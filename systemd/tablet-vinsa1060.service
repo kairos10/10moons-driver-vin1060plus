@@ -1,0 +1,8 @@
+[Service]
+Type=exec
+RestartSec=10
+Restart=on-success
+#ExecStartPre=
+#User=nobody
+#Group=input
+ExecStart=/usr/local/tablet_vinsa1060/t501_setup.sh
