@@ -122,10 +122,14 @@ pen_touch_prev = True
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 is_rotated = False
+num_errors = 0
 #
 # Infinite loop
 while True:
     try:
+        if num_errors > 50:
+            raise Exception("too many subsequent errors detected. bailing out...")
+
         data = dev.read(ep.bEndpointAddress, ep.wMaxPacketSize)
         if(DEBUG) : print(data) # shows button pressed array
         
@@ -142,15 +146,20 @@ while True:
         # data[5]: MSB pressure level 6,5,4,3
         if data[0] != 6:
             print(f"wrong reportID[{data[0]}]", flush=True)
+            x += 1
             continue
         if len(data) < 13:
             print(f"wrong report len[{len(data)}]", flush=True)
             for i in range(len(data)): print(f"{data[i]:02x}", end=" ", flush=True)
             print("")
+            x += 1
             continue
         if data[5] not in [2,3,4,5,6,7]:
             print(f"*pressureMSB:{data[5]:02x}*", end="", flush=True)
+            x += 1
             continue
+
+        num_errors = 0
 
         # xy: data[1,2,3,4]
         pen_reads_x[pen_reads_i] = abs(max_x - (data[x1] * 255 + data[x2]))
