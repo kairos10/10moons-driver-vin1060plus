@@ -2,6 +2,7 @@
  * apply moving average to pen movements -- config.pen.smooth_seq_len (default=1)
  * fix keys/buttons handling
  * rotate tablet by pressing the tablet keys CTRL+ALT+wheelUP+wheelDOWN
+ * added tilt detection
 
 # 10moons-driver-vin1060plus
 

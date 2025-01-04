@@ -48,13 +48,15 @@ btn_codes = temp
 pen_events = {
     ecodes.EV_KEY: pen_codes,
     ecodes.EV_ABS: [
-        #AbsInfo input: value, min, max, fuzz, flat
+        #AbsInfo input: value, min, max, fuzz, flat, resolution
         (ecodes.ABS_X, AbsInfo(0, 0, config["pen"]["max_x"], 0, 0, config["pen"]["resolution_x"])),         
         (ecodes.ABS_Y, AbsInfo(0, 0, config["pen"]["max_y"], 0, 0, config["pen"]["resolution_y"])),
         #dont calculate absolute x-max/x-min or y-max/y-min values when multiple displays used
         #rather use xrandr and xinput together to configure which display handles the virtual pen ID
         #eg. xinput map-to-output 17 DisplayPort-1
-        (ecodes.ABS_PRESSURE, AbsInfo(0, 0, config["pen"]["max_pressure"], 0, 0, 1))
+        (ecodes.ABS_PRESSURE, AbsInfo(0, 0, config["pen"]["max_pressure"], 0, 0, 1)),
+        (ecodes.ABS_TILT_X, AbsInfo(0, -127, 127, 0, 0, 128)),
+        (ecodes.ABS_TILT_Y, AbsInfo(0, -127, 127, 0, 0, 128)),
     ],
 }
 
@@ -92,8 +94,6 @@ if(DEBUG) : print(vbtn.capabilities(verbose=True).keys() )
 if(DEBUG) : print(vbtn.capabilities(verbose=True) )
 if(DEBUG) : print(vpen)
 if(DEBUG) : print(vbtn)
-
-pressed = -1
 
 # Direction and axis configuration
 max_x = config["pen"]["max_x"] * config["settings"]["swap_direction_x"]
@@ -146,20 +146,21 @@ while True:
         # data[5]: MSB pressure level 6,5,4,3
         if data[0] != 6:
             print(f"wrong reportID[{data[0]}]", flush=True)
-            x += 1
+            num_errors += 1
             continue
         if len(data) < 13:
             print(f"wrong report len[{len(data)}]", flush=True)
             for i in range(len(data)): print(f"{data[i]:02x}", end=" ", flush=True)
             print("")
-            x += 1
+            num_errors += 1
             continue
         if data[5] not in [2,3,4,5,6,7]:
             print(f"*pressureMSB:{data[5]:02x}*", end="", flush=True)
-            x += 1
+            num_errors += 1
             continue
 
         num_errors = 0
+
 
         # xy: data[1,2,3,4]
         pen_reads_x[pen_reads_i] = abs(max_x - (data[x1] * 255 + data[x2]))
@@ -193,6 +194,12 @@ while True:
         if (data[9] == 4): penbuttons[0] = 1
         if (data[9] == 6): penbuttons[1] = 1
 
+        # tilt x/y: data13/data14
+        tilt_x = data[13]
+        if tilt_x & 128: tilt_x = -(~tilt_x + 256)
+        tilt_y = data[14]
+        if tilt_y & 128: tilt_y = -(~tilt_y + 256)
+
 
 
         if keys == config["settings"]["rotate_shortcut"]:
@@ -218,6 +225,8 @@ while True:
         pen_touch_prev = pen_touch
         vpen.write(ecodes.EV_ABS, ecodes.ABS_X, pen_x)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_Y, pen_y)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_TILT_X, tilt_x)
+        vpen.write(ecodes.EV_ABS, ecodes.ABS_TILT_Y, tilt_y)
         vpen.write(ecodes.EV_ABS, ecodes.ABS_PRESSURE, pen_pressure)
         #
         vpen.syn()
