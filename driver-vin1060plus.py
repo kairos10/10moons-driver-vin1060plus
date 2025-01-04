@@ -93,8 +93,6 @@ if(DEBUG) : print(vbtn.capabilities(verbose=True) )
 if(DEBUG) : print(vpen)
 if(DEBUG) : print(vbtn)
 
-pressed = -1
-
 # Direction and axis configuration
 max_x = config["pen"]["max_x"] * config["settings"]["swap_direction_x"]
 max_y = config["pen"]["max_y"] * config["settings"]["swap_direction_y"]
@@ -146,17 +144,17 @@ while True:
         # data[5]: MSB pressure level 6,5,4,3
         if data[0] != 6:
             print(f"wrong reportID[{data[0]}]", flush=True)
-            x += 1
+            num_errors += 1
             continue
         if len(data) < 13:
             print(f"wrong report len[{len(data)}]", flush=True)
             for i in range(len(data)): print(f"{data[i]:02x}", end=" ", flush=True)
             print("")
-            x += 1
+            num_errors += 1
             continue
         if data[5] not in [2,3,4,5,6,7]:
             print(f"*pressureMSB:{data[5]:02x}*", end="", flush=True)
-            x += 1
+            num_errors += 1
             continue
 
         num_errors = 0
