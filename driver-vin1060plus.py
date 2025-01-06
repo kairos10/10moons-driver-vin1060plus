@@ -194,11 +194,9 @@ while True:
         if (data[9] == 4): penbuttons[0] = 1
         if (data[9] == 6): penbuttons[1] = 1
 
-        # tilt x/y: data13/data14
-        tilt_x = data[13]
-        if tilt_x & 128: tilt_x = -(~tilt_x + 256)
-        tilt_y = data[14]
-        if tilt_y & 128: tilt_y = -(~tilt_y + 256)
+        tilt_x = int.from_bytes([data[13]], signed=True)
+        tilt_y = int.from_bytes([data[14]], signed=True)
+        #print(f"{tilt_x:3d}", end=" ", flush=True)
 
 
 

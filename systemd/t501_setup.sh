@@ -16,7 +16,7 @@ t501_setup() {
 		echo "resetting tablet..."
 		eval "$T501_RESET" ${_info[1]} ${_info[3]}
 		echo "running driver..."
-		eval "$T501_VDEV"
+		eval nice -n -5 "$T501_VDEV"
 	fi
 }
 
