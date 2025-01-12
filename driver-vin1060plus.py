@@ -25,7 +25,7 @@ pen_codes = []
 btn_codes = []
 for k, v in config["actions"].items():
     #codes = btn_codes if k == "tablet_buttons" else pen_codes
-    codes = btn_codes if k in ["tablet_buttons", "pen_buttons"] else pen_codes
+    codes = btn_codes if k in ["tablet_buttons", "pen_buttons", "multimedia_buttons"] else pen_codes
     if isinstance(v, list):
         codes.extend(v)
     else:
@@ -136,7 +136,7 @@ penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 is_rotated = False
 num_errors = 0
 skip_num = 5 # the info from the 1st packets seem strange -- discard it
-mm_x2key = { 0x00c8:1, 0x025f:1, 0x03f7:1, 0x058e:4, 0x0725:5, 0x08bd:6, 0x0a54:7, 0x0bec:8, 0x0d83:9, 0x0f1a:10 }
+mm_x2key = { 0x00c8:1, 0x025f:2, 0x03f7:3, 0x058e:4, 0x0725:5, 0x08bd:6, 0x0a54:7, 0x0bec:8, 0x0d83:9, 0x0f1a:10 }
 #
 # Infinite loop
 while True:
@@ -249,8 +249,11 @@ while True:
             continue
 
         if mm_key and mm_pressed!=mm_pressed_prev:
-            # tbd
-            pass
+            key_codes = config["actions"]["multimedia_buttons"][mm_key-1].split("+")
+            for key in key_codes:
+                act = ecodes.ecodes[key]
+                vbtn.write(ecodes.EV_KEY, act, int(mm_pressed))
+            vbtn.syn()
         mm_pressed_prev = mm_pressed
 
         vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, int(pen_touch) )

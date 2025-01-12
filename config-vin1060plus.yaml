@@ -23,6 +23,17 @@ actions:
         #- BTN_STYLUS2                   #2nd button
         - BTN_RIGHT
         - KEY_LEFTCTRL+KEY_Z
+    multimedia_buttons: 
+      - KEY_0
+      - KEY_1
+      - KEY_2
+      - KEY_3
+      - KEY_4
+      - KEY_5
+      - KEY_6
+      - KEY_7
+      - KEY_8
+      - KEY_9
     tablet_buttons: 
     #for Keys :: python -c "from evdev import ecodes; print([x for x in dir(ecodes) if 'KEY_' in x])"
         #- KEY_E                         #labelled 'E'
