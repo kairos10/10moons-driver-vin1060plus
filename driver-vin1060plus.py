@@ -84,6 +84,17 @@ for j in [0, 1, 2]:
 # Set new configuration
 dev.set_configuration()
 
+############## configure the interface -- 0x21[REQUEST_TYPE_CLASS|RECIPIENT_INTERFACE|ENDPOINT_OUT] 9[SET_REPORT] 3[FEATURE_REPORT] 8[reportId] 2[ifIndex] 8[len]
+report = [ 0x08, 0x04, 0x1d, 0x01, 0xff, 0xff, 0x06, 0x2e ]
+dev.ctrl_transfer(0x21, 9, 0x0308, 2, report)
+report = [ 0x08, 0x03, 0x00, 0xff, 0xf0, 0x00, 0xff, 0xf0 ]
+dev.ctrl_transfer(0x21, 9, 0x0308, 2, report)
+report = [ 0x08, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+dev.ctrl_transfer(0x21, 9, 0x0308, 2, report)
+report = [ 0x08, 0x03, 0x00, 0xff, 0xf0, 0x00, 0xff, 0xf0 ]
+dev.ctrl_transfer(0x21, 9, 0x0308, 2, report)
+##############
+
 vpen = UInput(events=pen_events, name=config["xinput_name"], version=0x3)
 if(DEBUG) : print(vpen.capabilities(verbose=True).keys() )
 if(DEBUG) : print(vpen.capabilities(verbose=True) )
@@ -118,11 +129,14 @@ pen_reads_y = [ int(max_y/2) for _ in range(smooth_seq_len) ]
 pen_reads_len = smooth_seq_len
 pen_reads_i = 0
 #
-pen_touch_prev = True
+pen_touch_prev = False
+mm_pressed_prev = False
 keys_prev = [0] * len(config["actions"]["tablet_buttons"])
 penbuttons_prev = [0] * len(config["actions"]["pen_buttons"])
 is_rotated = False
 num_errors = 0
+skip_num = 5 # the info from the 1st packets seem strange -- discard it
+mm_x2key = { 0x00c8:1, 0x025f:1, 0x03f7:1, 0x058e:4, 0x0725:5, 0x08bd:6, 0x0a54:7, 0x0bec:8, 0x0d83:9, 0x0f1a:10 }
 #
 # Infinite loop
 while True:
@@ -132,6 +146,9 @@ while True:
 
         data = dev.read(ep.bEndpointAddress, ep.wMaxPacketSize)
         if(DEBUG) : print(data) # shows button pressed array
+
+        if skip_num > 0:
+            skip_num -= 1
         
         #When it only works on 3x6" Android Active area
         #array('B', [5, 128, 161, 13, 2, 9, 0, 0])
@@ -163,15 +180,31 @@ while True:
 
 
         # xy: data[1,2,3,4]
-        pen_reads_x[pen_reads_i] = abs(max_x - (data[x1] * 255 + data[x2]))
-        pen_reads_y[pen_reads_i] = abs(max_y - (data[y1] * 255 + data[y2]))
+        raw_x = data[x1] * 255 + data[x2]
+        raw_y = data[y1] * 255 + data[y2]
+        if raw_y&0xf000 > 0:
+            # pen is on the multimedia row
+            raw_y = 0
+            try:
+                mm_key = mm_x2key[raw_x]
+            except:
+                mm_key = 0
+        else:
+            mm_key = None
+        pen_reads_x[pen_reads_i] = abs(max_x - raw_x)
+        pen_reads_y[pen_reads_i] = abs(max_y - raw_y)
         pen_reads_i = (pen_reads_i+1) % pen_reads_len
+        #
         pen_x = int( sum(pen_reads_x) / pen_reads_len )
         pen_y = int( sum(pen_reads_y) / pen_reads_len )
 
         # pressure: data[5,6]
         pen_pressure = pressure_max - ( (data[5] & 31) * 255 + data[6]) # 8192 levels -> 13bits -> 5bits from data5 + 8bits from data6
         pen_touch = (pen_pressure >= pressure_contact_threshold) # when Pen touches tablet surface detection value
+
+        mm_pressed = pen_touch and mm_key!=None
+        if mm_pressed:
+            pen_touch = False
 
         # keys: data11, data12
         keys = [0] * len(keys_prev)
@@ -214,6 +247,11 @@ while True:
             is_rotated = not is_rotated
             print(f"tablet axes rotated: {is_rotated}")
             continue
+
+        if mm_key and mm_pressed!=mm_pressed_prev:
+            # tbd
+            pass
+        mm_pressed_prev = mm_pressed
 
         vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, int(pen_touch) )
         if pen_touch:
@@ -258,8 +296,14 @@ while True:
             vpen.close()
             raise Exception("Device has been disconnected")
     except KeyboardInterrupt:
-        vpen.close()
-        vbtn.close()
-        sys.exit("\nDriver terminated successfully.")
+        print("\nDriver terminated successfully.")
+        break
     except Exception as e:
         print(e)
+        break
+
+vpen.close()
+vbtn.close()
+usb.util.release_interface(dev, 0)
+
+sys.exit(0)
