@@ -4,6 +4,7 @@
  * rotate tablet by pressing the tablet keys CTRL+ALT+wheelUP+wheelDOWN
  * added tilt detection
  * removed dependency on `https://github.com/DIGImend/10moons-tools`
+ * handle pen presses on the multimedia row
 
 # 10moons-driver-vin1060plus
 

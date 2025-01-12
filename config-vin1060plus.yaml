@@ -24,16 +24,16 @@ actions:
         - BTN_RIGHT
         - KEY_LEFTCTRL+KEY_Z
     multimedia_buttons: 
-      - KEY_0
-      - KEY_1
-      - KEY_2
-      - KEY_3
-      - KEY_4
-      - KEY_5
-      - KEY_6
-      - KEY_7
-      - KEY_8
-      - KEY_9
+      - KEY_MUTE
+      - KEY_VOLUMEDOWN
+      - KEY_VOLUMEUP
+      - KEY_PLAYER
+      - KEY_PLAYPAUSE
+      - KEY_FASTREVERSE
+      - KEY_FASTFORWARD
+      - KEY_HOMEPAGE
+      - KEY_CALC
+      - KEY_LEFTMETA+KEY_D
     tablet_buttons: 
     #for Keys :: python -c "from evdev import ecodes; print([x for x in dir(ecodes) if 'KEY_' in x])"
         #- KEY_E                         #labelled 'E'
