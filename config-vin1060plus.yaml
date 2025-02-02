@@ -8,6 +8,7 @@ pen:
     resolution_y: 1
     max_pressure: 2048   # manual says 8192 but cheap chinese chip reports outputs much less values
     pressure_min: 300  # when pressing the tablet pen as hard as functionally possible (yours may vary)
+    pressure_min_histerezis: 5  # touch activates at [presure_min], but the deactivation occur at [pressure_min - histerezis]
     pressure_contact_threshold: 540    # when making contact with the tablet surface (yours may vary)
     smooth_seq_len: 8
 actions:

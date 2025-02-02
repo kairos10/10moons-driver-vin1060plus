@@ -128,6 +128,10 @@ pen_reads_x = [ int(max_x/2) for _ in range(smooth_seq_len) ]
 pen_reads_y = [ int(max_y/2) for _ in range(smooth_seq_len) ]
 pen_reads_len = smooth_seq_len
 pen_reads_i = 0
+
+try: pressure_min_histerezis = config["pen"]["pressure_min_histerezis"]
+except: pressure_min_histerezis = 0
+
 #
 pen_touch_prev = False
 mm_pressed_prev = False
@@ -200,7 +204,7 @@ while True:
 
         # pressure: data[5,6]
         pen_pressure = pressure_max - ( (data[5] & 31) * 255 + data[6]) # 8192 levels -> 13bits -> 5bits from data5 + 8bits from data6
-        pen_touch = (pen_pressure >= pressure_contact_threshold) # when Pen touches tablet surface detection value
+        pen_touch = (pen_pressure >= (pressure_contact_threshold - pen_touch_prev*pressure_min_histerezis) ) # when Pen touches tablet surface detection value
 
         mm_pressed = pen_touch and mm_key!=None
         if mm_pressed:

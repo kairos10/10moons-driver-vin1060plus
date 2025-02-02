@@ -176,15 +176,15 @@ The forum that got me started with finding a simple solution to my cheap graphic
 
 ## TODOS
 
-* Key Combinations dont work as expected. Need to debug that.  Keyboard HotKeys also dont work as expected.  Maybe try a different keyboard/mouse interaction python library --- ( pynPut ) https://nitratine.net/blog/post/simulate-keypresses-in-python/
+* ~~Key Combinations dont work as expected. Need to debug that.  Keyboard HotKeys also dont work as expected.  Maybe try a different keyboard/mouse interaction python library --- ( pynPut ) https://nitratine.net/blog/post/simulate-keypresses-in-python/
 
-* Map the 10 "virtual buttons" found on the top-side of the graphics tablet active area.  `( mute, vol_dwn, vol_up, music_player, play_pause, prev_song, next_song, home_btn, calc_btn, desktop_view )`.  `home_btn, calc_btn, desktop_view` works after plugging in usb tablet, but before running the `./10moons-probe`  command.
+* ~~Map the 10 "virtual buttons" found on the top-side of the graphics tablet active area.  `( mute, vol_dwn, vol_up, music_player, play_pause, prev_song, next_song, home_btn, calc_btn, desktop_view )`.  `home_btn, calc_btn, desktop_view` works after plugging in usb tablet, but before running the `./10moons-probe`  command.
 
 * Allow the Graphics App (e.g. Gimp, Scribus, Pix, Inkscape etc. ) to make use of the "pressure sensitivity" measurement. I think the issue lies with  `vpen.write(ecodes.EV_KEY, ecodes.BTN_TOUCH, 0)`  and  `ecodes.BTN_MOUSE` conflict.  `BTN_TOUCH` does not execute event, while  `BTN_MOUSE` does. ???
 
 * Use its linear Z-axis "pressure sensitivity" measurements and map it to a non-linear function (maybe bezzier-curve) that simulates more natural pen strokes. :)
 
-* Is there a way with [pyUSB transfer bytecode]() to the VINSA1060plus T501 microcontroller that can enable one to skip the `./10moons-probe` code execution ?!?!
+* ~~Is there a way with [pyUSB transfer bytecode]() to the VINSA1060plus T501 microcontroller that can enable one to skip the `./10moons-probe` code execution ?!?!
 
 * Refactor `driver-vin1060plus.py`.  Yikes,  it looks like a N00b modified it. :)
 
