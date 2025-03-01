@@ -186,7 +186,7 @@ The forum that got me started with finding a simple solution to my cheap graphic
 
 * ~~Is there a way with [pyUSB transfer bytecode]() to the VINSA1060plus T501 microcontroller that can enable one to skip the `./10moons-probe` code execution ?!?!
 
-* Refactor `driver-vin1060plus.py`.  Yikes,  it looks like a N00b modified it. :)
+* ~~Refactor `driver-vin1060plus.py`.  Yikes,  it looks like a N00b modified it. :)~~
 
 # Useful references
 

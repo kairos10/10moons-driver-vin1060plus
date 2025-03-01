@@ -1,7 +1,10 @@
 INST_DIR = /usr/local/tablet_vinsa1060/
 INST_OPTS = -o root -g root --backup=none --compare
 
-all: install
+all: help
+
+help:
+	@echo -e 'Nothing to do. Install the driver with:\n\n\tsudo make install\n'
 
 install:
 	install $(INST_OPTS) -d $(INST_DIR)
