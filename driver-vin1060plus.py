@@ -227,7 +227,7 @@ class TabletDriver:
 
         # Process tilt
         tilt_x = int.from_bytes([data[DATA_TILT_X]], signed=True)
-        tilt_y = int.from_bytes([data[DATA_TILT_X]], signed=True)
+        tilt_y = int.from_bytes([data[DATA_TILT_Y]], signed=True)
 
         # Update virtual devices
         self._update_pen_device(pen_touch, pen_x, pen_y, pen_pressure, tilt_x, tilt_y)
